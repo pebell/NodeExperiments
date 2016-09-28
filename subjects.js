@@ -47,6 +47,15 @@ function getUserObservable()
 }  
 
 
+
+function getFastUserObservable()
+{
+  return Rx.Observable.create(function (observer) {
+    getJSON('https://api.github.com/users').then(json=>{json.forEach((u,i)=>{observer.next(u)}) } );
+  });
+}  
+
+
 function getDelayedUserObservable(intervalFunc)
 {
   return Rx.Observable.create(function (observer) {
@@ -59,8 +68,14 @@ function getDelayedUserObservable(intervalFunc)
 }
 
 
+function getDelayedUserObservable2(ratePerMinute)
+{
+  return getFastUserObservable().concatMap(u=>Rx.Observable.interval(erlangInterval(ratePerMinute)).take(1), u => u)
+}
 
-// let userObservable = getDelayedUserObservable(erlangInterval.bind(this,60));
+let observable = getDelayedUserObservable2(60);
+
+// let observable = getDelayedUserObservable(erlangInterval.bind(this,60));
 
 
 function getRandomIntervalsObservable(ratePerMinute)
@@ -79,8 +94,9 @@ function getRandomIntervalsObservable(ratePerMinute)
   });
 }
 
+
 //let observable = getRandomIntervalsObservable(60).take(5);
-//let observable = Rx.Observable.interval(1000).take(5).map();
+// let observable = Rx.Observable.interval(1000).take(5).map();
 
 
 
@@ -94,7 +110,7 @@ function getDelayedObservable(arrayPromise,ratePerMinute)
   });
 }
 
-let observable = getDelayedObservable(getJSON('https://api.github.com/users'),60);
+// let observable = getDelayedObservable(getJSON('https://api.github.com/users'),60);
 
 
 observable.subscribe( 
