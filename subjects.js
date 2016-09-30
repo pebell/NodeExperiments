@@ -51,10 +51,11 @@ function getUserObservable()
 function getFastUserObservable()
 {
   return Rx.Observable.create(function (observer) {
-    getJSON('https://api.github.com/users').then(json=>{json.forEach((u,i)=>{observer.next(u)}) } );
+    getJSON('https://api.github.com/users').then(json=>{json.forEach((u,i)=>{observer.next(u)}); observer.complete() } );
   });
 }  
 
+//let observable = getFastUserObservable();
 
 function getDelayedUserObservable(intervalFunc)
 {
@@ -114,9 +115,9 @@ function getDelayedObservable(arrayPromise,ratePerMinute)
 
 
 observable.subscribe( 
-  function (x) { console.log('onNext: %s', x.login ? x.login : x); },
-  function (e) { console.log('onError: %s', e); },
-  function () { console.log('onCompleted'); }
+  (x) => console.log('next: %s', x.login ? x.login : x) ,
+  (e) => console.log('error: %s', e) ,
+  () => console.log('completed') 
 );
 
 var list = [1,2,3,4];
