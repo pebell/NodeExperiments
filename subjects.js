@@ -31,10 +31,6 @@ function constantInterval(ratePerMinute)
   return 60000/rate;
 }
 
-function erlangInterval(ratePerMinute)
-{
-  return (-1/ratePerMinute*Math.log(Math.random()))*60000;
-}
 
 
 
@@ -74,7 +70,7 @@ function getDelayedUserObservable2(ratePerMinute)
   return getFastUserObservable().concatMap(u=>Rx.Observable.interval(erlangInterval(ratePerMinute)).take(1), u => u)
 }
 
-let observable = getDelayedUserObservable2(60);
+// let observable = getDelayedUserObservable2(60);
 
 // let observable = getDelayedUserObservable(erlangInterval.bind(this,60));
 
@@ -113,6 +109,76 @@ function getDelayedObservable(arrayPromise,ratePerMinute)
 
 // let observable = getDelayedObservable(getJSON('https://api.github.com/users'),60);
 
+
+
+
+function getArrayPromiseObservable(arrayPromise)
+{
+  return Rx.Observable.create(function (observer) {
+    arrayPromise.then(json=>{json.forEach((u,i)=>{observer.next(u)}); observer.complete() } );
+  });
+}  
+
+function getDelayedArrayPromiseObservable(arrayPromise,ratePerMinute)
+{
+  return getArrayPromiseObservable(arrayPromise)
+                      .concatMap(u=>Rx.Observable.interval(erlangInterval(ratePerMinute)).take(1), u => u);
+}
+//let observable = getDelayedArrayPromiseObservable(getJSON('https://api.github.com/users'),60);
+
+
+
+/** *****************************************************************************************************
+
+           AWESOME IMPLEMENTATION
+
+** *****************************************************************************************************/
+
+function erlangInterval(ratePerMinute)
+{
+  return (-1/ratePerMinute*Math.log(Math.random()))*60000;
+}
+
+
+Rx.Observable.fromArrayPromise = function(arrayPromise) {
+  return Rx.Observable.create(function (observer) {
+      arrayPromise.then(json=>{json.forEach((u,i)=>{observer.next(u)}); observer.complete() } );
+    });
+}
+
+Rx.Observable.naturalInterval = function(ratePerMinute)
+{
+  return Rx.Observable.create(function (observer) {
+    function nextItem(cnt)
+    {
+      observer.next(cnt++)
+      if (!observer.isStopped && !observer.closed)
+      {
+        setTimeout(nextItem.bind(null,cnt),erlangInterval(ratePerMinute));
+      }
+    }
+    setTimeout(nextItem.bind(null,0),erlangInterval(ratePerMinute));
+  });
+}
+
+
+Rx.Observable.prototype.naturalDelay = function (ratePerMinute) {
+  return this.concatMap(u=>Rx.Observable.interval(erlangInterval(ratePerMinute)).take(1), u => u);
+}
+
+Rx.Observable.prototype.logit = function () {
+  this.subscribe( 
+    (x) => console.log('next: %s', x) ,
+    (e) => console.log('error: %s', e) ,
+    () => console.log('completed') 
+  );
+  return this;
+}
+
+/* ****************************************************************************************************** */
+
+let observable = Rx.Observable.fromArrayPromise(getJSON('https://api.github.com/users')).naturalDelay(60);
+let observable2 = Rx.Observable.naturalInterval(60).take(30).logit();
 
 observable.subscribe( 
   (x) => console.log('next: %s', x.login ? x.login : x) ,
