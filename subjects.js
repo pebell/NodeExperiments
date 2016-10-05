@@ -151,7 +151,11 @@ Rx.Observable.naturalInterval = function(ratePerMinute)
   return Rx.Observable.create(function (observer) {
     function nextItem(cnt)
     {
-      observer.next(cnt++)
+      // Maybe the observer has "externally" been stopped while we waited for this invocation
+      if (!observer.isStopped && !observer.closed) {
+        observer.next(cnt++)
+      }  
+      // Maybe the observer has been stopped while performing the next() operation
       if (!observer.isStopped && !observer.closed)
       {
         setTimeout(nextItem.bind(null,cnt),erlangInterval(ratePerMinute));
@@ -166,19 +170,14 @@ Rx.Observable.prototype.naturalDelay = function (ratePerMinute) {
   return this.concatMap(u=>Rx.Observable.interval(erlangInterval(ratePerMinute)).take(1), u => u);
 }
 
-Rx.Observable.prototype.logit = function () {
-  this.subscribe( 
-    (x) => console.log('next: %s', x) ,
-    (e) => console.log('error: %s', e) ,
-    () => console.log('completed') 
-  );
-  return this;
+Rx.Observable.prototype.logProp = function (property) {
+  return this.do((x)=>console.log('=>next: %s', property ? x[property] : x) );
 }
 
 /* ****************************************************************************************************** */
 
-let observable = Rx.Observable.fromArrayPromise(getJSON('https://api.github.com/users')).naturalDelay(60);
-let observable2 = Rx.Observable.naturalInterval(60).take(30).logit();
+let observable = Rx.Observable.fromArrayPromise(getJSON('https://api.github.com/users')).naturalDelay(60).logProp('login');
+//let observable = Rx.Observable.naturalInterval(60).takeUntil(Rx.Observable.interval(24000));
 
 observable.subscribe( 
   (x) => console.log('next: %s', x.login ? x.login : x) ,
