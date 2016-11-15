@@ -146,9 +146,9 @@ Rx.Observable.fromArrayPromise = function(arrayPromise) {
     });
 }
 
-Rx.Observable.naturalInterval = function(ratePerMinute)
+Rx.Observable.naturalInterval = function(ratePerMinute, totalDuration)
 {
-  return Rx.Observable.create(function (observer) {
+  let naturalObservable = Rx.Observable.create(function (observer) {
     function nextItem(cnt)
     {
       // Maybe the observer has "externally" been stopped while we waited for this invocation
@@ -163,6 +163,8 @@ Rx.Observable.naturalInterval = function(ratePerMinute)
     }
     setTimeout(nextItem.bind(null,0),erlangInterval(ratePerMinute));
   });
+  if (totalDuration) naturalObservable = naturalObservable.takeUntil(Rx.Observable.interval(totalDuration));
+  return naturalObservable;
 }
 
 
@@ -171,13 +173,16 @@ Rx.Observable.prototype.naturalDelay = function (ratePerMinute) {
 }
 
 Rx.Observable.prototype.logProp = function (property) {
-  return this.do((x)=>console.log('=>next: %s', property ? x[property] : x) );
+  return this.do((x)=>console.log('=>logProp: %s', property ? x[property] : x) );
 }
 
 /* ****************************************************************************************************** */
 
-let observable = Rx.Observable.fromArrayPromise(getJSON('https://api.github.com/users')).naturalDelay(60).logProp('login');
-//let observable = Rx.Observable.naturalInterval(60).takeUntil(Rx.Observable.interval(24000));
+//let observable = Rx.Observable.fromArrayPromise(getJSON('https://api.github.com/users')).naturalDelay(60).logProp('login');
+
+//let observable = Rx.Observable.naturalInterval(120,25000).bufferTime(250).filter(l=>l.length>1);
+
+let observable = Rx.Observable.of('aap','noot','mies','pim','vis','vuur').naturalDelay(60);
 
 observable.subscribe( 
   (x) => console.log('next: %s', x.login ? x.login : x) ,
@@ -185,7 +190,12 @@ observable.subscribe(
   () => console.log('completed') 
 );
 
-var list = [1,2,3,4];
+observable.subscribe( 
+  (x) => console.log('next: %s', x.login ? x.login : x) ,
+  (e) => console.log('error: %s', e) ,
+  () => console.log('completed') 
+);
+
 
 function logIt(v)
 {
