@@ -1,0 +1,23 @@
+{
+  "name": "node-experiments",
+  "version": "1.0.0",
+  "description": "My personal tests with Node JS",
+  "main": "derivables.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pebell/NodeExperiments.git"
+  },
+  "author": "Peter Ebell",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pebell/NodeExperiments/issues"
+  },
+  "homepage": "https://github.com/pebell/NodeExperiments#readme",
+  "dependencies": {
+    "derivable": "^0.12.1",
+    "rxjs": "^5.0.3"
+  }
+}
